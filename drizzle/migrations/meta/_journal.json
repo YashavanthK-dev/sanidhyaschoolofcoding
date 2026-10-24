@@ -8,6 +8,13 @@
       "when": 1792711679937,
       "tag": "0000_content_and_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792800000000,
+      "tag": "0001_admin_allowlist",
+      "breakpoints": true
     }
   ]
 }
