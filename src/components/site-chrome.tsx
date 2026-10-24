@@ -1,0 +1,149 @@
+import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import logo from "@/assets/mark.png.asset.json";
+import { Button } from "@/components/ui/button";
+
+const nav = [
+  { to: "/courses", label: "Courses" },
+  { to: "/learning-paths", label: "Learning Paths" },
+  { to: "/projects", label: "Projects" },
+  { to: "/resources", label: "Resources" },
+  { to: "/about", label: "About" },
+] as const;
+
+export function Brand() {
+  return (
+    <Link to="/" className="flex items-center gap-2.5">
+      <img src={logo.url} alt="" className="h-10 w-auto" />
+      <span className="leading-tight">
+        <span className="block font-display text-base font-bold tracking-tight">SANIDHYA</span>
+        <span className="block text-[11px] text-muted-foreground">School of Coding</span>
+      </span>
+    </Link>
+  );
+}
+
+export function SiteHeader() {
+  const [open, setOpen] = useState(false);
+  return (
+    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+        <Brand />
+        <nav className="hidden items-center gap-1 md:flex">
+          {nav.map((n) => (
+            <Link
+              key={n.to}
+              to={n.to}
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              activeProps={{ className: "text-foreground" }}
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="hidden md:block">
+          <Button asChild variant="hero">
+            <Link to="/contact">Get in touch</Link>
+          </Button>
+        </div>
+        <button className="md:hidden p-2" aria-label="Menu" onClick={() => setOpen(!open)}>
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </div>
+      {open && (
+        <nav className="border-t px-5 py-3 md:hidden">
+          {[...nav, { to: "/contact", label: "Contact" } as const].map((n) => (
+            <Link
+              key={n.to}
+              to={n.to}
+              onClick={() => setOpen(false)}
+              className="block py-2.5 font-medium"
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
+      )}
+    </header>
+  );
+}
+
+export function SiteFooter() {
+  return (
+    <footer className="mt-24 border-t bg-secondary/50">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-4">
+        <div className="md:col-span-2">
+          <Brand />
+          <p className="mt-4 max-w-sm text-sm text-muted-foreground">
+            Build, not just study. Practice, not just theory. Create, not just memorize.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold">Learn</h4>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <li>
+              <Link to="/courses">Courses</Link>
+            </li>
+            <li>
+              <Link to="/learning-paths">Learning Paths</Link>
+            </li>
+            <li>
+              <Link to="/projects">Projects</Link>
+            </li>
+            <li>
+              <Link to="/resources">Resources</Link>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold">Sanidhya</h4>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <li>
+              <Link to="/about">About</Link>
+            </li>
+            <li>
+              <Link to="/contact">Contact</Link>
+            </li>
+            <li>
+              <Link to="/admin">Admin</Link>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="border-t py-5 text-center font-mono text-xs text-muted-foreground">
+        © {new Date().getFullYear()} Sanidhya School of Coding · Learn. Build. Create.
+      </div>
+    </footer>
+  );
+}
+
+export function PageHeader({
+  eyebrow,
+  title,
+  intro,
+}: {
+  eyebrow: string;
+  title: string;
+  intro: string;
+}) {
+  return (
+    <section className="relative overflow-hidden border-b bg-gradient-soft">
+      <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
+        <p className="font-mono text-xs font-medium uppercase tracking-widest text-primary">
+          {eyebrow}
+        </p>
+        <h1 className="mt-3 text-4xl font-bold md:text-5xl">{title}</h1>
+        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{intro}</p>
+      </div>
+    </section>
+  );
+}
+
+export function LevelBadge({ level }: { level: string }) {
+  return (
+    <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
+      {level}
+    </span>
+  );
+}
