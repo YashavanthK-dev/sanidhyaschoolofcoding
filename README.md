@@ -1,4 +1,8 @@
-# Welcome to your Lovable project
+# Sanidhya School of Coding
+
+A modern coding education platform featuring interactive learning resources, programming tutorials, and a user-friendly interface, built to help learners develop practical coding skills.
+
+## Built with Lovable
 
 This project was built with [Lovable](https://lovable.dev).
 
