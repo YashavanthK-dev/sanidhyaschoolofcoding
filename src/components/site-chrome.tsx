@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "@/assets/mark.png.asset.json";
 import { Button } from "@/components/ui/button";
+import { socialLinks } from "@/content/social-links";
 
 const nav = [
   { to: "/courses", label: "Courses" },
@@ -72,9 +73,15 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t bg-secondary/50">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-5">
         <div className="md:col-span-2">
-          <Brand />
+          <Link
+            to="/"
+            aria-label="Sanidhya School of Coding home"
+            className="inline-flex overflow-hidden rounded-2xl border bg-white shadow-card transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <img src="/ssc-logo.png" alt="" className="h-28 w-28 object-contain sm:h-32 sm:w-32" />
+          </Link>
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
             Build, not just study. Practice, not just theory. Create, not just memorize.
           </p>
@@ -108,6 +115,24 @@ export function SiteFooter() {
             <li>
               <Link to="/admin">Admin</Link>
             </li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold">Connect</h4>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            {socialLinks.map(({ label, href, icon: SocialIcon }) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 transition-colors hover:text-primary"
+                >
+                  <SocialIcon className="h-4 w-4" />
+                  {label}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

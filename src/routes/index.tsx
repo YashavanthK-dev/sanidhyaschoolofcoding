@@ -8,19 +8,17 @@ import {
   Code2,
   Database,
   ExternalLink,
-  Github,
   Globe,
   Hammer,
   Layers,
-  Linkedin,
   PlayCircle,
   ShieldCheck,
   Sparkles,
-  Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CourseCard } from "@/components/cards";
 import { categories } from "@/content/catalog";
+import { socialLinks } from "@/content/social-links";
 import { listCourses, listPaths, listProjects, listResources } from "@/lib/content.functions";
 
 export const Route = createFileRoute("/")({
@@ -87,24 +85,6 @@ const categoryDescriptions: Record<string, string> = {
   Cybersecurity: "Understand common risks and develop safer software habits.",
   "Cloud & DevOps": "Deploy applications and learn the systems that keep them running.",
 };
-
-const socialLinks = [
-  {
-    label: "GitHub",
-    href: "https://github.com/YashavanthK-dev/Yashavanth-K",
-    icon: Github,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/in/sanidhyaschoolofcoding/",
-    icon: Linkedin,
-  },
-  {
-    label: "YouTube",
-    href: "https://www.youtube.com/@SanidhyaSchoolOfCoding",
-    icon: Youtube,
-  },
-];
 
 const starterGoals = [
   {
