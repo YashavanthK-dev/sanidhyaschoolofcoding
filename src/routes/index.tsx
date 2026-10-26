@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -15,7 +16,6 @@ import {
   PlayCircle,
   ShieldCheck,
   Sparkles,
-  TerminalSquare,
   Youtube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -106,8 +106,33 @@ const socialLinks = [
   },
 ];
 
+const starterGoals = [
+  {
+    category: "Programming",
+    label: "Start coding",
+    description: "Build a strong foundation with beginner-friendly programming concepts.",
+    icon: Code2,
+  },
+  {
+    category: "Web Development",
+    label: "Create for the web",
+    description: "Learn how websites work, then make pages and applications of your own.",
+    icon: Globe,
+  },
+  {
+    category: "Artificial Intelligence",
+    label: "Explore AI",
+    description: "Get curious about modern AI and discover how to build with it.",
+    icon: BrainCircuit,
+  },
+] as const;
+
 function Index() {
   const { courses, projects, paths: learningPaths, resources } = Route.useLoaderData();
+  const [selectedCategory, setSelectedCategory] = useState<string>(starterGoals[0].category);
+  const selectedGoal = starterGoals.find((goal) => goal.category === selectedCategory)!;
+  const recommendedCourses = courses.filter((course) => course.category === selectedCategory);
+  const GoalIcon = selectedGoal.icon;
   return (
     <>
       <section className="relative isolate overflow-hidden bg-gradient-soft">
@@ -151,59 +176,101 @@ function Index() {
             </dl>
           </div>
 
-          <div className="relative mx-auto w-full max-w-xl">
-            <div className="absolute -inset-8 -z-10 rounded-full bg-primary/10 blur-3xl" />
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-ink text-ink-foreground shadow-elegant">
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-                <div className="flex items-center gap-2 font-mono text-xs text-white/65">
-                  <TerminalSquare className="h-4 w-4 text-primary" /> YOUR LEARNING PIPELINE
-                </div>
-                <div className="flex gap-1.5" aria-hidden="true">
-                  <span className="h-2 w-2 rounded-full bg-white/25" />
-                  <span className="h-2 w-2 rounded-full bg-white/25" />
-                  <span className="h-2 w-2 rounded-full bg-primary" />
-                </div>
+          <div className="relative mx-auto w-full max-w-lg">
+            <div className="absolute -inset-8 -z-10 rounded-full bg-primary/15 blur-3xl" />
+            <div className="group relative overflow-hidden rounded-[2rem] border bg-white p-5 shadow-elegant transition-transform duration-500 hover:-translate-y-1 sm:p-8">
+              <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-gradient-brand opacity-10 blur-3xl" />
+              <img
+                src="/ssc-logo.png"
+                alt="Sanidhya School of Coding logo"
+                className="relative mx-auto aspect-square w-full max-w-[29rem] object-contain"
+                fetchPriority="high"
+              />
+              <div className="relative mx-auto -mt-2 flex w-fit items-center gap-2 rounded-full border bg-white/90 px-4 py-2 font-mono text-[11px] text-muted-foreground shadow-card backdrop-blur sm:-mt-5">
+                <span className="h-2 w-2 rounded-full bg-primary" />A learning space for curious
+                minds
               </div>
-              <div className="space-y-5 p-6 md:p-8">
-                <p className="font-mono text-xs text-white/45">
-                  // A clear route from curiosity to capability
-                </p>
-                <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 font-mono text-sm leading-7">
-                  <p>
-                    <span className="text-primary">01</span>{" "}
-                    <span className="text-white/55">learn</span>(the_concept)
-                  </p>
-                  <p>
-                    <span className="text-primary">02</span>{" "}
-                    <span className="text-white/55">practice</span>(with_guidance)
-                  </p>
-                  <p>
-                    <span className="text-primary">03</span>{" "}
-                    <span className="text-white/55">build</span>(a_real_project)
-                  </p>
-                  <p>
-                    <span className="text-primary">04</span>{" "}
-                    <span className="text-white/55">share</span>(what_you_made)
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {[
-                    ["01", "Understand", "Start with the why"],
-                    ["02", "Practice", "Try it with support"],
-                    ["03", "Create", "Ship something real"],
-                  ].map(([number, title, detail]) => (
-                    <div key={number} className="rounded-xl border border-white/10 p-3">
-                      <p className="font-mono text-[10px] text-primary">STEP {number}</p>
-                      <p className="mt-2 text-sm font-semibold">{title}</p>
-                      <p className="mt-1 text-xs text-white/55">{detail}</p>
-                    </div>
-                  ))}
-                </div>
-                <p className="flex items-center gap-2 text-xs text-white/55">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />A practical learning
-                  loop, at your own pace
-                </p>
+            </div>
+            <div className="absolute -bottom-5 -left-2 rounded-2xl border bg-card px-4 py-3 shadow-elegant sm:-left-6">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
+                Your next idea
+              </p>
+              <p className="mt-1 text-sm font-semibold">can start with one line.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 py-14 md:py-16" aria-labelledby="starter-heading">
+        <div className="grid gap-8 rounded-3xl border bg-card p-6 shadow-card md:grid-cols-[1fr_0.9fr] md:p-10">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-widest text-primary">
+              Find your first step
+            </p>
+            <h2 id="starter-heading" className="mt-2 text-3xl font-bold md:text-4xl">
+              What would you like to learn?
+            </h2>
+            <p className="mt-3 max-w-xl leading-7 text-muted-foreground">
+              Choose an interest and we’ll point you to a place to begin. You can change your choice
+              anytime.
+            </p>
+            <div
+              className="mt-6 grid gap-2 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
+              role="group"
+              aria-label="Choose a learning goal"
+            >
+              {starterGoals.map((goal) => {
+                const GoalOptionIcon = goal.icon;
+                const active = selectedCategory === goal.category;
+                return (
+                  <button
+                    key={goal.category}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSelectedCategory(goal.category)}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-all hover:border-primary/60 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "border-primary bg-accent text-accent-foreground shadow-card" : "bg-background"}`}
+                  >
+                    <GoalOptionIcon className="h-4 w-4 shrink-0 text-primary" />
+                    {goal.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div
+            aria-live="polite"
+            className="flex flex-col justify-between rounded-2xl bg-ink p-6 text-ink-foreground md:p-8"
+          >
+            <div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-primary">
+                <GoalIcon className="h-5 w-5" />
               </div>
+              <p className="mt-5 font-mono text-xs uppercase tracking-widest text-primary">
+                Your suggested starting point
+              </p>
+              <h3 className="mt-2 text-2xl font-bold">{selectedGoal.label}</h3>
+              <p className="mt-2 leading-7 text-white/70">{selectedGoal.description}</p>
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              {recommendedCourses[0] ? (
+                <Button asChild variant="hero">
+                  <Link to="/courses/$slug" params={{ slug: recommendedCourses[0].slug }}>
+                    Start with {recommendedCourses[0].title} <ArrowRight />
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild variant="hero">
+                  <Link to="/courses" search={{ category: selectedCategory }}>
+                    Browse this topic <ArrowRight />
+                  </Link>
+                </Button>
+              )}
+              <Link
+                to="/learning-paths"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-white/75 transition-colors hover:text-white"
+              >
+                View learning paths <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </div>
