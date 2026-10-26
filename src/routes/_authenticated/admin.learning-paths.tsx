@@ -8,7 +8,8 @@ export const Route = createFileRoute("/_authenticated/admin/learning-paths")({
       title="Learning paths"
       fields={[
         { name: "title", label: "Title", kind: "text", required: true },
-        { name: "summary", label: "Short description", kind: "textarea" },
+        { name: "summary", label: "Short description", kind: "textarea", required: true },
+        { name: "cover_image_path", label: "Learning path cover image", kind: "image" },
         { name: "duration", label: "Duration", kind: "text", hint: "e.g. 6 months" },
         { name: "steps", label: "Steps, in order", kind: "list", hint: "One step per line" },
       ]}

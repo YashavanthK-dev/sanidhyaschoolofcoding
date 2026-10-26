@@ -20,6 +20,7 @@ import { CourseCard } from "@/components/cards";
 import { categories } from "@/content/catalog";
 import { socialLinks } from "@/content/social-links";
 import { listCourses, listPaths, listProjects, listResources } from "@/lib/content.functions";
+import { getContentImageUrl } from "@/lib/content-media";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -420,16 +421,27 @@ function Index() {
         {projects.length ? (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {projects.slice(0, 3).map((project, index) => (
-              <article
+              <Link
                 key={project.slug}
+                to="/projects/$slug"
+                params={{ slug: project.slug }}
                 className="group overflow-hidden rounded-2xl border bg-card shadow-card transition-all hover:-translate-y-1 hover:shadow-elegant"
               >
                 <div className="relative flex h-28 items-end justify-between overflow-hidden bg-ink p-5 text-ink-foreground">
-                  <div className="absolute -right-7 -top-16 h-40 w-40 rounded-full bg-gradient-brand opacity-40 blur-2xl" />
-                  <span className="relative font-mono text-xs text-white/60">
+                  {getContentImageUrl(project.cover_image_path) ? (
+                    <img
+                      src={getContentImageUrl(project.cover_image_path) ?? ""}
+                      alt={`${project.title} project cover`}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute -right-7 -top-16 h-40 w-40 rounded-full bg-gradient-brand opacity-40 blur-2xl" />
+                  )}
+                  <span className="relative rounded-md bg-ink/70 px-2 py-1 font-mono text-xs text-white/80">
                     BUILD / {String(index + 1).padStart(2, "0")}
                   </span>
-                  <span className="relative rounded-full border border-white/15 px-2.5 py-1 text-xs">
+                  <span className="relative rounded-full border border-white/60 bg-ink/70 px-2.5 py-1 text-xs">
                     {project.level}
                   </span>
                 </div>
@@ -450,8 +462,12 @@ function Index() {
                       </span>
                     ))}
                   </div>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    View project{" "}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         ) : (

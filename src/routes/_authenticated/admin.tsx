@@ -33,7 +33,11 @@ function AdminLayout() {
   const role = useQuery({
     queryKey: ["is-admin", user.id],
     queryFn: async () => {
-      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      if (error) throw error;
       return Boolean(data);
     },
   });
@@ -46,13 +50,28 @@ function AdminLayout() {
   }
 
   if (role.isLoading) return <div className="p-10 text-muted-foreground">Loading…</div>;
+  if (role.isError)
+    return (
+      <div className="mx-auto max-w-md px-5 py-24 text-center">
+        <h1 className="text-2xl font-bold">Couldn’t verify admin access</h1>
+        <p className="mt-2 text-muted-foreground">
+          Check your connection and try again. Your admin session is still protected.
+        </p>
+        <div className="mt-6 flex justify-center gap-2">
+          <Button variant="outline" onClick={() => role.refetch()}>
+            Try again
+          </Button>
+          <Button variant="ghost" onClick={signOut}>
+            Sign out
+          </Button>
+        </div>
+      </div>
+    );
   if (!role.data)
     return (
       <div className="mx-auto max-w-md px-5 py-24 text-center">
         <h1 className="text-2xl font-bold">No admin access</h1>
-        <p className="mt-2 text-muted-foreground">
-          This account ({user.email}) isn't an administrator.
-        </p>
+        <p className="mt-2 text-muted-foreground">This account isn’t an administrator.</p>
         <Button className="mt-6" variant="outline" onClick={signOut}>
           Sign out
         </Button>

@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { FileImage, ImagePlus, LoaderCircle, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  getContentImageUrl,
+  CONTENT_MEDIA_BUCKET,
+  isManagedContentImage,
+} from "@/lib/content-media";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -21,17 +26,12 @@ import {
 
 export type ContentTable = "courses" | "projects" | "learning_paths" | "resources";
 
+type FieldBase = { name: string; label: string; required?: boolean; hint?: string };
+
 export type Field =
-  | {
-      name: string;
-      label: string;
-      kind: "text" | "textarea" | "number";
-      required?: boolean;
-      hint?: string;
-    }
-  | { name: string; label: string; kind: "select"; options: readonly string[] }
-  | { name: string; label: string; kind: "list"; hint?: string }
-  | { name: string; label: string; kind: "modules" };
+  | (FieldBase & { kind: "text" | "textarea" | "number" })
+  | (FieldBase & { kind: "select"; options: readonly string[] })
+  | (FieldBase & { kind: "list" | "modules" | "image" });
 
 type Row = Record<string, unknown> & { id: string; status: string; title: string };
 
@@ -91,7 +91,9 @@ function fromForm(fields: Field[], v: Record<string, string>) {
         .filter(Boolean);
     else if (f.kind === "modules") out[f.name] = textToModules(raw);
     else if (f.kind === "number") out[f.name] = Number(raw) || 0;
-    else out[f.name] = f.kind === "text" && f.name === "url" && !raw.trim() ? null : raw.trim();
+    else
+      out[f.name] =
+        ["url", "repository_url", "demo_url"].includes(f.name) && !raw.trim() ? null : raw.trim();
   }
   return out;
 }
@@ -111,6 +113,22 @@ export function ContentManager({
   const [editing, setEditing] = useState<Row | "new" | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
   const [toDelete, setToDelete] = useState<Row | null>(null);
+  const [toPublish, setToPublish] = useState<Row | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null);
+      return;
+    }
+    const preview = URL.createObjectURL(coverFile);
+    setCoverPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [coverFile]);
 
   const list = useQuery({
     queryKey: ["admin", table],
@@ -125,30 +143,129 @@ export function ContentManager({
     },
   });
 
+  const visibleRows = (list.data ?? []).filter((row) => {
+    const query = search.trim().toLocaleLowerCase();
+    const matchesSearch =
+      !query ||
+      [row.title, row.summary, row.slug].some((value) =>
+        String(value ?? "")
+          .toLocaleLowerCase()
+          .includes(query),
+      );
+    return matchesSearch && (statusFilter === "all" || row.status === statusFilter);
+  });
+
+  function validateForm() {
+    const nextErrors: Record<string, string> = {};
+    for (const field of allFields) {
+      const value = form[field.name] ?? "";
+      if (field.required && !value.trim()) nextErrors[field.name] = `${field.label} is required.`;
+      if (field.kind === "number" && value) {
+        const number = Number(value);
+        if (!Number.isFinite(number) || number < 0)
+          nextErrors[field.name] = "Enter a number that is zero or greater.";
+      }
+      if (["url", "repository_url", "demo_url"].includes(field.name) && value.trim()) {
+        try {
+          const url = new URL(value.trim());
+          if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error();
+        } catch {
+          nextErrors[field.name] = "Enter a valid http or https link.";
+        }
+      }
+    }
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
+
   const save = useMutation({
     mutationFn: async () => {
+      let uploadedPath: string | null = null;
+      const previousPath =
+        editing === "new" ? null : String((editing as Row).cover_image_path ?? "");
       const payload = fromForm(fields, form);
       if (!String(payload["title"] ?? "").trim()) throw new Error("Title is required");
       if (hasSlug) payload["slug"] = slugify(String(payload["slug"] || payload["title"]));
-      const q =
-        editing === "new"
-          ? supabase.from(table).insert(payload as never)
-          : supabase
-              .from(table)
-              .update(payload as never)
-              .eq("id", (editing as Row).id);
-      const { error } = await q;
-      if (error)
-        throw new Error(
-          error.code === "23505" ? "That web address (slug) is already used" : error.message,
-        );
+      let previousImageCleanupFailed = false;
+      try {
+        if (coverFile) {
+          const extensions: Record<string, string> = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+          };
+          const extension = extensions[coverFile.type];
+          if (!extension) throw new Error("Choose a JPG, PNG, or WebP image.");
+          if (coverFile.size > 5 * 1024 * 1024) throw new Error("Images must be 5 MB or smaller.");
+          uploadedPath = `${table}/${crypto.randomUUID()}.${extension}`;
+          const { error: uploadError } = await supabase.storage
+            .from(CONTENT_MEDIA_BUCKET)
+            .upload(uploadedPath, coverFile, {
+              cacheControl: "3600",
+              contentType: coverFile.type,
+              upsert: false,
+            });
+          if (uploadError) {
+            if (uploadError.message.toLowerCase().includes("bucket not found"))
+              throw new Error(
+                "Apply database migration 0002_content_media.sql to enable image uploads.",
+              );
+            throw uploadError;
+          }
+          payload["cover_image_path"] = uploadedPath;
+        } else if ("cover_image_path" in payload) {
+          payload["cover_image_path"] = form["cover_image_path"]?.trim() || null;
+        }
+
+        const q =
+          editing === "new"
+            ? supabase.from(table).insert(payload as never)
+            : supabase
+                .from(table)
+                .update(payload as never)
+                .eq("id", (editing as Row).id);
+        const { error } = await q;
+        if (error) {
+          if (error.code === "23505") throw new Error("That web address (slug) is already used.");
+          if (error.code === "PGRST204" || error.code === "42703")
+            throw new Error(
+              "Apply database migration 0002_content_media.sql before saving cover images.",
+            );
+          throw error;
+        }
+
+        const nextPath = String(payload["cover_image_path"] ?? "");
+        if (
+          previousPath &&
+          previousPath !== nextPath &&
+          isManagedContentImage(previousPath, table)
+        ) {
+          const { error: removeError } = await supabase.storage
+            .from(CONTENT_MEDIA_BUCKET)
+            .remove([previousPath]);
+          if (removeError) {
+            previousImageCleanupFailed = true;
+            console.warn("Could not remove the previous cover image", removeError);
+          }
+        }
+        return { previousImageCleanupFailed };
+      } catch (error) {
+        if (uploadedPath) {
+          await supabase.storage.from(CONTENT_MEDIA_BUCKET).remove([uploadedPath]);
+        }
+        throw error;
+      }
     },
-    onSuccess: () => {
-      toast.success("Saved");
+    onSuccess: (result) => {
+      if (result.previousImageCleanupFailed)
+        toast.warning("Saved. The previous image could not be removed from storage.");
+      else toast.success("Saved");
       setEditing(null);
+      setCoverFile(null);
+      setFieldErrors({});
       qc.invalidateQueries({ queryKey: ["admin"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Could not save this item."),
   });
 
   const setStatus = useMutation({
@@ -159,17 +276,33 @@ export function ContentManager({
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin"] }),
+    onSuccess: () => {
+      toast.success("Visibility updated");
+      qc.invalidateQueries({ queryKey: ["admin"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, imagePath }: { id: string; imagePath: string }) => {
       const { error } = await supabase.from(table).delete().eq("id", id);
       if (error) throw error;
+      let imageCleanupFailed = false;
+      if (imagePath && isManagedContentImage(imagePath, table)) {
+        const { error: removeError } = await supabase.storage
+          .from(CONTENT_MEDIA_BUCKET)
+          .remove([imagePath]);
+        if (removeError) {
+          imageCleanupFailed = true;
+          console.warn("Could not remove the deleted item's cover image", removeError);
+        }
+      }
+      return { imageCleanupFailed };
     },
-    onSuccess: () => {
-      toast.success("Deleted");
+    onSuccess: (result) => {
+      if (result.imageCleanupFailed)
+        toast.warning("Deleted. The cover image could not be removed from storage.");
+      else toast.success("Deleted");
       setToDelete(null);
       qc.invalidateQueries({ queryKey: ["admin"] });
     },
@@ -199,6 +332,8 @@ export function ContentManager({
 
   function open(row?: Row) {
     setForm(toForm(allFields, row));
+    setCoverFile(null);
+    setFieldErrors({});
     setEditing(row ?? "new");
   }
 
@@ -211,71 +346,230 @@ export function ContentManager({
         </Button>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border bg-card shadow-card">
-        {list.isLoading && <p className="p-6 text-sm text-muted-foreground">Loading…</p>}
-        {list.data?.length === 0 && (
-          <p className="p-6 text-sm text-muted-foreground">Nothing here yet.</p>
+      <div className="mt-6 rounded-2xl border bg-card p-4 shadow-card sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <label className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={`Search ${title.toLowerCase()}…`}
+              aria-label={`Search ${title.toLowerCase()}`}
+              className="pl-9"
+            />
+          </label>
+          <select
+            aria-label="Filter by status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-9 rounded-md border bg-background px-3 text-sm capitalize"
+          >
+            <option value="all">All statuses</option>
+            {STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{visibleRows.length} shown</span>
+          <span>
+            {(list.data ?? []).filter((row) => row.status === "published").length} published
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-2xl border bg-card shadow-card">
+        {list.isLoading && <p className="p-6 text-sm text-muted-foreground">Loading content…</p>}
+        {list.isError && (
+          <div className="flex flex-wrap items-center justify-between gap-3 p-6">
+            <p className="text-sm text-destructive">Could not load this content.</p>
+            <Button variant="outline" size="sm" onClick={() => list.refetch()}>
+              Try again
+            </Button>
+          </div>
+        )}
+        {!list.isLoading && !list.isError && visibleRows.length === 0 && (
+          <div className="p-8 text-center">
+            <FileImage className="mx-auto h-8 w-8 text-muted-foreground/60" />
+            <p className="mt-3 font-semibold">
+              {(list.data ?? []).length === 0 ? "Nothing here yet" : "No matching content"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {(list.data ?? []).length === 0
+                ? `Add your first ${title.toLowerCase()} item to get started.`
+                : "Try a different search or status filter."}
+            </p>
+          </div>
         )}
         <ul className="divide-y">
-          {list.data?.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-center gap-3 p-4">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{r.title}</p>
-                {"slug" in r && (
-                  <p className="truncate font-mono text-xs text-muted-foreground">
-                    /{String(r["slug"])}
-                  </p>
+          {visibleRows.map((row) => {
+            const imageUrl = getContentImageUrl(String(row.cover_image_path ?? ""));
+            return (
+              <li key={row.id} className="flex flex-wrap items-center gap-4 p-4 sm:p-5">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt=""
+                    className="h-16 w-24 shrink-0 rounded-lg border object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed bg-muted/40 text-muted-foreground">
+                    <FileImage className="h-5 w-5" />
+                  </div>
                 )}
-              </div>
-              <select
-                aria-label="Status"
-                value={r.status}
-                onChange={(e) => setStatus.mutate({ id: r.id, status: e.target.value })}
-                className={`h-8 rounded-md border px-2 text-xs font-semibold capitalize ${r.status === "published" ? "border-primary bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <Button size="icon" variant="ghost" aria-label="Edit" onClick={() => open(r)}>
-                <Pencil />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label="Delete"
-                onClick={() => setToDelete(r)}
-              >
-                <Trash2 className="text-destructive" />
-              </Button>
-            </li>
-          ))}
+                <div className="min-w-[12rem] flex-1">
+                  <p className="truncate font-semibold">{row.title}</p>
+                  {"slug" in row && (
+                    <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+                      /{String(row.slug)}
+                    </p>
+                  )}
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    {String(row.summary ?? "No description added yet.")}
+                  </p>
+                </div>
+                <select
+                  aria-label={`Visibility for ${row.title}`}
+                  value={row.status}
+                  disabled={setStatus.isPending}
+                  onChange={(event) => {
+                    const status = event.target.value;
+                    if (status === "published" && row.status !== "published") setToPublish(row);
+                    else setStatus.mutate({ id: row.id, status });
+                  }}
+                  className={`h-9 rounded-md border px-2 text-xs font-semibold capitalize disabled:opacity-60 ${row.status === "published" ? "border-primary bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  {STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Edit ${row.title}`}
+                  onClick={() => open(row)}
+                >
+                  <Pencil />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Delete ${row.title}`}
+                  onClick={() => setToDelete(row)}
+                >
+                  <Trash2 className="text-destructive" />
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
-      <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open && !save.isPending) setEditing(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing === "new" ? "Add new" : "Edit"}</DialogTitle>
+            <DialogTitle>
+              {editing === "new" ? "Add" : "Edit"} {title.toLowerCase().replace(/s$/, "")}
+            </DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
+              if (!validateForm()) return;
               save.mutate();
             }}
           >
             {allFields.map((f) => (
               <div key={f.name} className="space-y-1.5">
-                <Label htmlFor={f.name}>{f.label}</Label>
-                {f.kind === "select" ? (
+                <Label htmlFor={f.name}>
+                  {f.label}
+                  {f.required && <span className="ml-1 text-destructive">*</span>}
+                </Label>
+                {f.kind === "image" ? (
+                  <div className="rounded-xl border border-dashed p-4">
+                    {coverPreview || getContentImageUrl(form[f.name]) ? (
+                      <div className="relative overflow-hidden rounded-lg border bg-muted">
+                        <img
+                          src={coverPreview ?? getContentImageUrl(form[f.name]) ?? ""}
+                          alt=""
+                          className="max-h-64 w-full object-contain"
+                        />
+                        <span className="absolute bottom-2 left-2 rounded-md bg-background/90 px-2 py-1 text-xs text-muted-foreground">
+                          Cover preview
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex min-h-36 flex-col items-center justify-center rounded-lg bg-muted/30 text-center">
+                        <FileImage className="h-8 w-8 text-muted-foreground/60" />
+                        <p className="mt-2 text-sm font-medium">No cover image selected</p>
+                      </div>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <Label
+                        htmlFor={`${f.name}-file`}
+                        className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md bg-secondary px-3 text-sm font-medium hover:bg-secondary/80"
+                      >
+                        <ImagePlus className="h-4 w-4" />
+                        Choose image
+                      </Label>
+                      <Input
+                        id={`${f.name}-file`}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (!file) return;
+                          if (!new Set(["image/jpeg", "image/png", "image/webp"]).has(file.type)) {
+                            toast.error("Choose a JPG, PNG, or WebP image.");
+                            return;
+                          }
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error("Images must be 5 MB or smaller.");
+                            return;
+                          }
+                          setCoverFile(file);
+                          setForm((current) => ({ ...current, [f.name]: current[f.name] ?? "" }));
+                        }}
+                      />
+                      {(coverFile || form[f.name]) && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setCoverFile(null);
+                            setForm((current) => ({ ...current, [f.name]: "" }));
+                          }}
+                        >
+                          <X className="h-4 w-4" /> Remove image
+                        </Button>
+                      )}
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      JPG, PNG, or WebP · up to 5 MB. Public pages can display covers; only admins
+                      can upload, replace, or remove them.
+                    </p>
+                  </div>
+                ) : f.kind === "select" ? (
                   <select
                     id={f.name}
                     value={form[f.name]}
                     onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
-                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                    aria-invalid={Boolean(fieldErrors[f.name])}
+                    className="h-9 w-full rounded-md border bg-background px-3 text-sm aria-[invalid=true]:border-destructive"
                   >
                     {f.options.map((o) => (
                       <option key={o}>{o}</option>
@@ -287,14 +581,26 @@ export function ContentManager({
                     rows={f.kind === "modules" ? 6 : 3}
                     value={form[f.name]}
                     onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
+                    required={f.kind === "textarea" && f.required}
+                    aria-invalid={Boolean(fieldErrors[f.name])}
+                    className="aria-[invalid=true]:border-destructive"
                   />
                 ) : (
                   <Input
                     id={f.name}
-                    type={f.kind === "number" ? "number" : "text"}
+                    type={f.kind === "number" ? "number" : f.name === "url" ? "url" : "text"}
+                    min={f.kind === "number" ? 0 : undefined}
                     value={form[f.name]}
                     onChange={(e) => setForm({ ...form, [f.name]: e.target.value })}
+                    required={f.kind !== "number" && f.required}
+                    aria-invalid={Boolean(fieldErrors[f.name])}
+                    className="aria-[invalid=true]:border-destructive"
                   />
+                )}
+                {fieldErrors[f.name] && (
+                  <p id={`${f.name}-error`} role="alert" className="text-xs text-destructive">
+                    {fieldErrors[f.name]}
+                  </p>
                 )}
                 {"hint" in f && f.hint && <p className="text-xs text-muted-foreground">{f.hint}</p>}
                 {f.kind === "list" && !("hint" in f && f.hint) && (
@@ -326,11 +632,22 @@ export function ContentManager({
               </p>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setEditing(null)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditing(null)}
+                disabled={save.isPending}
+              >
                 Cancel
               </Button>
               <Button type="submit" variant="hero" disabled={save.isPending}>
-                {save.isPending ? "Saving…" : "Save"}
+                {save.isPending ? (
+                  <>
+                    <LoaderCircle className="animate-spin" /> Saving…
+                  </>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </div>
           </form>
@@ -347,8 +664,41 @@ export function ContentManager({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => toDelete && remove.mutate(toDelete.id)}>
-              Delete
+            <AlertDialogAction
+              disabled={remove.isPending}
+              onClick={() =>
+                toDelete &&
+                remove.mutate({
+                  id: toDelete.id,
+                  imagePath: String(toDelete.cover_image_path ?? ""),
+                })
+              }
+            >
+              {remove.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={toPublish !== null} onOpenChange={(open) => !open && setToPublish(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Publish "{toPublish?.title}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Published content becomes visible on the public website immediately. Check its title,
+              description, and cover image before continuing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep as draft</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={setStatus.isPending}
+              onClick={() => {
+                if (toPublish) setStatus.mutate({ id: toPublish.id, status: "published" });
+                setToPublish(null);
+              }}
+            >
+              {setStatus.isPending ? "Publishing…" : "Publish"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -9,7 +9,8 @@ export const Route = createFileRoute("/_authenticated/admin/courses")({
       title="Courses"
       fields={[
         { name: "title", label: "Title", kind: "text", required: true },
-        { name: "summary", label: "Short description", kind: "textarea" },
+        { name: "summary", label: "Short description", kind: "textarea", required: true },
+        { name: "cover_image_path", label: "Course cover image", kind: "image" },
         { name: "category", label: "Topic", kind: "select", options: categories },
         { name: "level", label: "Level", kind: "select", options: levels },
         { name: "duration", label: "Duration", kind: "text", hint: "e.g. 6 weeks" },

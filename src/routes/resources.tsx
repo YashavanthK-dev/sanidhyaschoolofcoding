@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { FileText, Newspaper, PlayCircle, ScrollText } from "lucide-react";
 import { listResources } from "@/lib/content.functions";
 import { PageHeader } from "@/components/site-chrome";
+import { getContentImageUrl } from "@/lib/content-media";
 
 export const Route = createFileRoute("/resources")({
   head: () => ({
@@ -38,14 +39,24 @@ function Resources() {
       <section className="mx-auto grid max-w-6xl gap-4 px-5 py-12 md:grid-cols-2">
         {resources.map((r) => {
           const Icon = icons[r.type] ?? FileText;
+          const coverUrl = getContentImageUrl(r.cover_image_path);
           return (
             <article
               key={r.title}
               className="flex gap-4 rounded-2xl border bg-card p-5 shadow-card"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-                <Icon className="h-5 w-5" />
-              </div>
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  alt={`${r.title} resource cover`}
+                  className="h-16 w-24 shrink-0 rounded-lg border object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                  <Icon className="h-5 w-5" />
+                </div>
+              )}
               <div>
                 <p className="font-mono text-xs text-muted-foreground">
                   {r.type} · {r.topic}

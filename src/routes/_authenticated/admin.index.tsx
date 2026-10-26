@@ -21,6 +21,8 @@ function Overview() {
             supabase.from(t).select("id", { count: "exact", head: true }),
             supabase.from(t).select("id", { count: "exact", head: true }).eq("status", "published"),
           ]);
+          if (all.error) throw all.error;
+          if (pub.error) throw pub.error;
           return { total: all.count ?? 0, published: pub.count ?? 0 };
         }),
       );
@@ -28,16 +30,32 @@ function Overview() {
         .from("contact_messages")
         .select("id", { count: "exact", head: true })
         .eq("is_read", false);
+      if (unread.error) throw unread.error;
       return { counts, unread: unread.count ?? 0 };
     },
+    refetchInterval: 30_000,
   });
 
   return (
     <div>
       <h1 className="text-2xl font-bold">Overview</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Changes you publish here appear on the website straight away.
+        Drafts stay private. Publishing makes content visible on the public website.
       </p>
+      {stats.isError && (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive">
+            Dashboard counts couldn’t load. Your content is unchanged.
+          </p>
+          <button
+            type="button"
+            onClick={() => stats.refetch()}
+            className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tables.map((x, i) => (
           <Link

@@ -50,6 +50,18 @@ export const listProjects = createServerFn({ method: "GET" }).handler(async () =
   return data ?? [];
 });
 
+export const getProject = createServerFn({ method: "GET" })
+  .inputValidator((d: { slug: string }) => z.object({ slug: z.string().max(200) }).parse(d))
+  .handler(async ({ data }) => {
+    const { data: row } = await publicClient()
+      .from("projects")
+      .select("*")
+      .eq("slug", data.slug)
+      .eq("status", "published")
+      .maybeSingle();
+    return row;
+  });
+
 export const listPaths = createServerFn({ method: "GET" }).handler(async () => {
   const { data } = await publicClient()
     .from("learning_paths")

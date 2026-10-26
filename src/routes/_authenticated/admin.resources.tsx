@@ -16,7 +16,8 @@ export const Route = createFileRoute("/_authenticated/admin/resources")({
           options: ["Notes", "Article", "Cheatsheet", "Video"],
         },
         { name: "topic", label: "Topic", kind: "text" },
-        { name: "summary", label: "Short description", kind: "textarea" },
+        { name: "summary", label: "Short description", kind: "textarea", required: true },
+        { name: "cover_image_path", label: "Resource cover image", kind: "image" },
         {
           name: "url",
           label: "Link (optional)",

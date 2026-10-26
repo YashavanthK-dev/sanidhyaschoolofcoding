@@ -116,10 +116,10 @@ Open the URL Vite prints in the terminal (commonly `http://localhost:5173`). Sto
 The Drizzle schema is in `drizzle/schema.ts`; SQL migrations are in `drizzle/migrations/`.
 
 1. Create or select the Supabase project and configure the environment variables above.
-2. Review and apply the migrations in order: `0000_content_and_admin.sql`, then `0001_admin_allowlist.sql`, using your approved Supabase workflow or SQL editor.
-3. The first migration creates content tables, RLS policies, contact messages, and starter content. The second removes first-user auto-admin assignment and requires an allowlisted admin for the database role check.
+2. Review and apply the migrations in order: `0000_content_and_admin.sql`, `0001_admin_allowlist.sql`, then `0002_content_media.sql`, using your approved Supabase workflow or SQL editor.
+3. The first migration creates content tables, RLS policies, contact messages, and starter content. The second removes first-user auto-admin assignment and requires an allowlisted admin for the database role check. The third adds richer project details, cover-image fields, and a public-read/admin-write image bucket with a 5 MB size limit and image MIME restrictions.
 4. After the allowlist migration, a project owner must add each intended Supabase user's UUID to `public.admin_allowlist` and grant that user the `admin` role in `public.user_roles`. Do not expose service-role credentials in the browser. The allowlist table is not accessible to anonymous or authenticated clients.
-5. Verify that the admin can sign in and manage content, and that public pages only show published records.
+5. Verify that the admin can sign in and manage content, uploads work for admins, and public pages only show published records.
 
 These migrations change database security and access. Verify the target Supabase project before applying; do not reset a database to install them. For schema changes, update the Drizzle schema and create/review a new migration instead of editing an already-applied migration.
 

@@ -38,6 +38,7 @@ export type Database = {
       courses: {
         Row: {
           category: string;
+          cover_image_path: string | null;
           created_at: string;
           duration: string;
           id: string;
@@ -55,6 +56,7 @@ export type Database = {
         };
         Insert: {
           category?: string;
+          cover_image_path?: string | null;
           created_at?: string;
           duration?: string;
           id?: string;
@@ -72,6 +74,7 @@ export type Database = {
         };
         Update: {
           category?: string;
+          cover_image_path?: string | null;
           created_at?: string;
           duration?: string;
           id?: string;
@@ -92,6 +95,7 @@ export type Database = {
       learning_paths: {
         Row: {
           created_at: string;
+          cover_image_path: string | null;
           duration: string;
           id: string;
           slug: string;
@@ -104,6 +108,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          cover_image_path?: string | null;
           duration?: string;
           id?: string;
           slug: string;
@@ -116,6 +121,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          cover_image_path?: string | null;
           duration?: string;
           id?: string;
           slug?: string;
@@ -131,8 +137,13 @@ export type Database = {
       projects: {
         Row: {
           created_at: string;
+          cover_image_path: string | null;
+          demo_url: string | null;
+          details: string;
+          features: string[];
           id: string;
           level: Database["public"]["Enums"]["content_level"];
+          repository_url: string | null;
           slug: string;
           sort_order: number;
           stack: string[];
@@ -143,8 +154,13 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          cover_image_path?: string | null;
+          demo_url?: string | null;
+          details?: string;
+          features?: string[];
           id?: string;
           level?: Database["public"]["Enums"]["content_level"];
+          repository_url?: string | null;
           slug: string;
           sort_order?: number;
           stack?: string[];
@@ -155,8 +171,13 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          cover_image_path?: string | null;
+          demo_url?: string | null;
+          details?: string;
+          features?: string[];
           id?: string;
           level?: Database["public"]["Enums"]["content_level"];
+          repository_url?: string | null;
           slug?: string;
           sort_order?: number;
           stack?: string[];
@@ -170,6 +191,7 @@ export type Database = {
       resources: {
         Row: {
           created_at: string;
+          cover_image_path: string | null;
           id: string;
           sort_order: number;
           status: Database["public"]["Enums"]["content_status"];
@@ -182,6 +204,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          cover_image_path?: string | null;
           id?: string;
           sort_order?: number;
           status?: Database["public"]["Enums"]["content_status"];
@@ -194,6 +217,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          cover_image_path?: string | null;
           id?: string;
           sort_order?: number;
           status?: Database["public"]["Enums"]["content_status"];

@@ -4,6 +4,7 @@ import { getCourse } from "@/lib/content.functions";
 import type { Module } from "@/content/catalog";
 import { LevelBadge } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
+import { getContentImageUrl } from "@/lib/content-media";
 
 export const Route = createFileRoute("/courses/$slug")({
   loader: async ({ params }) => {
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/courses/$slug")({
 
 function CoursePage() {
   const c = Route.useLoaderData();
+  const coverUrl = getContentImageUrl(c.cover_image_path);
   return (
     <>
       <section className="border-b bg-gradient-soft">
@@ -57,6 +59,15 @@ function CoursePage() {
               {c.lessons} lessons
             </span>
           </div>
+          {coverUrl && (
+            <div className="mt-8 overflow-hidden rounded-3xl border bg-card shadow-card">
+              <img
+                src={coverUrl}
+                alt={`${c.title} course cover`}
+                className="max-h-[32rem] w-full object-cover"
+              />
+            </div>
+          )}
         </div>
       </section>
       <section className="mx-auto grid max-w-6xl gap-10 px-5 py-14 lg:grid-cols-3">
