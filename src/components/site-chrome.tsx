@@ -116,6 +116,9 @@ export function SiteFooter() {
               <Link to="/privacy-policy">Privacy Policy</Link>
             </li>
             <li>
+              <Link to="/terms-and-conditions">Terms and Conditions</Link>
+            </li>
+            <li>
               <Link to="/admin">Admin</Link>
             </li>
           </ul>

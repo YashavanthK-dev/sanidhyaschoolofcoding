@@ -18,6 +18,7 @@ import { Route as LearningPathsRouteImport } from './routes/learning-paths'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as CoursesSlugRouteImport } from './routes/courses.$slug'
@@ -71,6 +72,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
 const ResourcesRoute = ResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
+  id: '/terms-and-conditions',
+  path: '/terms-and-conditions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/resources': typeof ResourcesRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/courses/$slug': typeof CoursesSlugRoute
   '/projects/$slug': typeof ProjectsSlugRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/resources': typeof ResourcesRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/courses/$slug': typeof CoursesSlugRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/courses': typeof CoursesIndexRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/resources': typeof ResourcesRoute
+  '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/courses/$slug': typeof CoursesSlugRoute
   '/projects/$slug': typeof ProjectsSlugRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/projects'
     | '/resources'
+    | '/terms-and-conditions'
     | '/admin'
     | '/courses/$slug'
     | '/projects/$slug'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/projects'
     | '/resources'
+    | '/terms-and-conditions'
     | '/courses/$slug'
     | '/projects/$slug'
     | '/courses'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/projects'
     | '/resources'
+    | '/terms-and-conditions'
     | '/_authenticated/admin'
     | '/courses/$slug'
     | '/projects/$slug'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   ResourcesRoute: typeof ResourcesRoute
+  TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   CoursesSlugRoute: typeof CoursesSlugRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
 }
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       path: '/resources'
       fullPath: '/resources'
       preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-and-conditions': {
+      id: '/terms-and-conditions'
+      path: '/terms-and-conditions'
+      fullPath: '/terms-and-conditions'
+      preLoaderRoute: typeof TermsAndConditionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -459,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   ResourcesRoute: ResourcesRoute,
+  TermsAndConditionsRoute: TermsAndConditionsRoute,
   CoursesSlugRoute: CoursesSlugRoute,
   CoursesIndexRoute: CoursesIndexRoute,
 }
