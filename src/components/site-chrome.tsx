@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import logo from "@/assets/mark.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { socialLinks } from "@/content/social-links";
 
@@ -16,7 +15,7 @@ const nav = [
 export function Brand() {
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <img src={logo.url} alt="" className="h-10 w-auto" />
+      <img src="/sanidhya-mark.png" alt="" className="h-10 w-auto" />
       <span className="leading-tight">
         <span className="block font-display text-base font-bold tracking-tight">SANIDHYA</span>
         <span className="block text-[11px] text-muted-foreground">School of Coding</span>
