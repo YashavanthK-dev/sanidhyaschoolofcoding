@@ -30,7 +30,10 @@ export function SiteHeader() {
 
   useEffect(() => {
     if (!open) return;
-    const closeOnScroll = () => setOpen(false);
+    const openedAtScrollY = window.scrollY;
+    const closeOnScroll = () => {
+      if (Math.abs(window.scrollY - openedAtScrollY) >= 8) setOpen(false);
+    };
     window.addEventListener("scroll", closeOnScroll, { passive: true });
     return () => window.removeEventListener("scroll", closeOnScroll);
   }, [open]);
