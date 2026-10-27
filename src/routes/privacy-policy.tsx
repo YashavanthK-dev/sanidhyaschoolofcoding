@@ -112,7 +112,7 @@ const sections = [
   },
   {
     title: "15. Contact Us",
-    paragraphs: ["If you have questions, concerns, or requests regarding this Privacy Policy or the handling of your personal information, contact YK UNIVERSE through the official contact information published on the relevant website.", "Platform: Sanidhya School of Coding", "Organization: YK UNIVERSE", "Related platform: STUDY WITH YASHVANTH", "Privacy contact email: To be added before publication.", "We will review privacy-related requests and respond in accordance with applicable law."],
+    paragraphs: ["If you have questions, concerns, or requests regarding this Privacy Policy or the handling of your personal information, contact YK UNIVERSE through the official contact information published on the relevant website.", "Platform: Sanidhya School of Coding", "Organization: YK UNIVERSE", "Related platform: STUDY WITH YASHVANTH", "Privacy contact email: sanidhyaschoolofcoding@gmail.com", "We will review privacy-related requests and respond in accordance with applicable law."],
   },
 ];
 
@@ -156,9 +156,6 @@ function PrivacyPolicy() {
             </section>
           ))}
         </div>
-        <p className="mt-12 border-t pt-6 text-sm italic leading-6 text-muted-foreground">
-          This Privacy Policy is a general website-policy draft and is not a substitute for legal advice. It should be reviewed against the actual data collected, the services enabled, and the laws applicable to the platform before publication.
-        </p>
       </article>
     </>
   );
