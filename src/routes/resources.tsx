@@ -43,7 +43,7 @@ function Resources() {
           return (
             <article
               key={r.title}
-              className="flex gap-4 rounded-2xl border bg-card p-5 shadow-card"
+              className="flex min-w-0 gap-4 rounded-2xl border bg-card p-4 shadow-card sm:p-5"
             >
               {coverUrl ? (
                 <img
@@ -57,7 +57,7 @@ function Resources() {
                   <Icon className="h-5 w-5" />
                 </div>
               )}
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-mono text-xs text-muted-foreground">
                   {r.type} · {r.topic}
                 </p>

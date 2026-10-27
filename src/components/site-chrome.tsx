@@ -29,8 +29,10 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <Brand />
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-5">
+        <div className="min-w-0">
+          <Brand />
+        </div>
         <nav className="hidden items-center gap-1 md:flex">
           {nav.map((n) => (
             <Link
@@ -48,7 +50,7 @@ export function SiteHeader() {
             <Link to="/contact">Get in touch</Link>
           </Button>
         </div>
-        <button className="md:hidden p-2" aria-label="Menu" onClick={() => setOpen(!open)}>
+        <button className="shrink-0 p-2 md:hidden" aria-label="Menu" onClick={() => setOpen(!open)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
@@ -73,8 +75,8 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t bg-secondary/50">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-5">
-        <div className="md:col-span-2">
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:gap-10 sm:py-14 md:grid-cols-2 lg:grid-cols-5">
+        <div className="md:col-span-2 lg:col-span-2">
           <Link
             to="/"
             aria-label="Sanidhya School of Coding home"
