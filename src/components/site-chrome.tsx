@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import logo from "@/assets/mark.png.asset.json";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,16 @@ export function Brand() {
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnScroll = () => setOpen(false);
+    window.addEventListener("scroll", closeOnScroll, { passive: true });
+    return () => window.removeEventListener("scroll", closeOnScroll);
+  }, [open]);
+
+  const mobileNav = [{ to: "/", label: "Home" }, ...nav, { to: "/contact", label: "Contact" }] as const;
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-5">
@@ -50,13 +60,19 @@ export function SiteHeader() {
             <Link to="/contact">Get in touch</Link>
           </Button>
         </div>
-        <button className="shrink-0 p-2 md:hidden" aria-label="Menu" onClick={() => setOpen(!open)}>
+        <button
+          className="shrink-0 p-2 md:hidden"
+          aria-label="Menu"
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
+          onClick={() => setOpen(!open)}
+        >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
       {open && (
-        <nav className="border-t px-5 py-3 md:hidden">
-          {[...nav, { to: "/contact", label: "Contact" } as const].map((n) => (
+        <nav id="mobile-navigation" className="border-t px-5 py-3 md:hidden">
+          {mobileNav.map((n) => (
             <Link
               key={n.to}
               to={n.to}

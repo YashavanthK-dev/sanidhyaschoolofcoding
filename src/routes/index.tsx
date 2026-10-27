@@ -183,12 +183,12 @@ function Index() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-14 md:py-16" aria-labelledby="starter-heading">
-        <div className="grid gap-8 rounded-3xl border bg-card p-6 shadow-card md:grid-cols-[1fr_0.9fr] md:p-10">
+        <div className="grid min-w-0 gap-6 rounded-3xl border bg-card p-4 shadow-card sm:gap-8 sm:p-6 md:grid-cols-[1fr_0.9fr] md:p-10">
           <div>
             <p className="font-mono text-xs uppercase tracking-widest text-primary">
               Find your first step
             </p>
-            <h2 id="starter-heading" className="mt-2 text-3xl font-bold md:text-4xl">
+            <h2 id="starter-heading" className="mt-2 text-2xl font-bold sm:text-3xl md:text-4xl">
               What would you like to learn?
             </h2>
             <p className="mt-3 max-w-xl leading-7 text-muted-foreground">
@@ -196,7 +196,7 @@ function Index() {
               anytime.
             </p>
             <div
-              className="mt-6 grid gap-2 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3"
+              className="mt-6 grid min-w-0 gap-2 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-3"
               role="group"
               aria-label="Choose a learning goal"
             >
@@ -209,10 +209,10 @@ function Index() {
                     type="button"
                     aria-pressed={active}
                     onClick={() => setSelectedCategory(goal.category)}
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-all hover:border-primary/60 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "border-primary bg-accent text-accent-foreground shadow-card" : "bg-background"}`}
+                    className={`flex min-w-0 items-center gap-2 rounded-xl border px-3 py-3 text-left text-sm font-semibold transition-all hover:border-primary/60 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "border-primary bg-accent text-accent-foreground shadow-card" : "bg-background"}`}
                   >
                     <GoalOptionIcon className="h-4 w-4 shrink-0 text-primary" />
-                    {goal.label}
+                    <span className="min-w-0">{goal.label}</span>
                   </button>
                 );
               })}
@@ -220,7 +220,7 @@ function Index() {
           </div>
           <div
             aria-live="polite"
-            className="flex flex-col justify-between rounded-2xl bg-ink p-6 text-ink-foreground md:p-8"
+            className="flex min-w-0 flex-col justify-between rounded-2xl bg-ink p-5 text-ink-foreground sm:p-6 md:p-8"
           >
             <div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-primary">
@@ -232,15 +232,23 @@ function Index() {
               <h3 className="mt-2 text-2xl font-bold">{selectedGoal.label}</h3>
               <p className="mt-2 leading-7 text-white/70">{selectedGoal.description}</p>
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               {recommendedCourses[0] ? (
-                <Button asChild variant="hero">
+                <Button
+                  asChild
+                  variant="hero"
+                  className="h-auto min-w-0 max-w-full w-full justify-between whitespace-normal px-4 py-3 text-left leading-5 sm:w-auto"
+                >
                   <Link to="/courses/$slug" params={{ slug: recommendedCourses[0].slug }}>
                     Start with {recommendedCourses[0].title} <ArrowRight />
                   </Link>
                 </Button>
               ) : (
-                <Button asChild variant="hero">
+                <Button
+                  asChild
+                  variant="hero"
+                  className="h-auto min-w-0 max-w-full w-full justify-between whitespace-normal px-4 py-3 text-left leading-5 sm:w-auto"
+                >
                   <Link to="/courses" search={{ category: selectedCategory }}>
                     Browse this topic <ArrowRight />
                   </Link>
@@ -248,7 +256,7 @@ function Index() {
               )}
               <Link
                 to="/learning-paths"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-white/75 transition-colors hover:text-white"
+                className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-white/75 transition-colors hover:text-white"
               >
                 View learning paths <ArrowRight className="h-4 w-4" />
               </Link>
