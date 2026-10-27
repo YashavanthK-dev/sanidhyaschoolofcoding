@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LearningPathsRouteImport } from './routes/learning-paths'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -55,6 +56,11 @@ const ContactRoute = ContactRouteImport.update({
 const LearningPathsRoute = LearningPathsRouteImport.update({
   id: '/learning-paths',
   path: '/learning-paths',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/learning-paths': typeof LearningPathsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/resources': typeof ResourcesRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/learning-paths': typeof LearningPathsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/resources': typeof ResourcesRoute
   '/courses/$slug': typeof CoursesSlugRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/learning-paths': typeof LearningPathsRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/resources': typeof ResourcesRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/learning-paths'
+    | '/privacy-policy'
     | '/projects'
     | '/resources'
     | '/admin'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/learning-paths'
+    | '/privacy-policy'
     | '/projects'
     | '/resources'
     | '/courses/$slug'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/learning-paths'
+    | '/privacy-policy'
     | '/projects'
     | '/resources'
     | '/_authenticated/admin'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   LearningPathsRoute: typeof LearningPathsRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   ResourcesRoute: typeof ResourcesRoute
   CoursesSlugRoute: typeof CoursesSlugRoute
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       path: '/learning-paths'
       fullPath: '/learning-paths'
       preLoaderRoute: typeof LearningPathsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -436,6 +456,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   LearningPathsRoute: LearningPathsRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   ResourcesRoute: ResourcesRoute,
   CoursesSlugRoute: CoursesSlugRoute,
